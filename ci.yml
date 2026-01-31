@@ -1,0 +1,64 @@
+name: CI - Build & Publish (Windows)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      # Checkout source code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      #  Setup Java (Windows)
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      #  Build Spring Boot JAR
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      #  Docker Login (Windows-safe)
+      - name: Docker Login
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login `
+            -u "${{ secrets.DOCKER_USERNAME }}" `
+            --password-stdin
+
+      #  Build Docker Image
+      - name: Build Docker Image
+        run: |
+          docker build `
+            -t ${{ secrets.DOCKER_USERNAME }}/springboot:${{ github.sha }} `
+            .
+
+      #  Push Docker Image
+      - name: Push Docker Image
+        run: |
+          docker push `
+            ${{ secrets.DOCKER_USERNAME }}/springboot:${{ github.sha }}
+
+      #  Update Helm values in GitOps Repo
+      - name: Update GitOps Helm values
+        run: |
+          git clone https://x-access-token:${{ secrets.GITOPS_REPO_TOKEN }}@github.com/<ORG>/gitops-repo.git
+          cd gitops-repo/charts/springboot
+
+          powershell -Command `
+            "(Get-Content values.yaml) `
+            -replace 'tag:.*', 'tag: ${{ github.sha }}' `
+            | Set-Content values.yaml"
+
+          git config user.email "ci@github.com"
+          git config user.name "github-actions"
+
+          git add values.yaml
+          git commit -m "ci: update image tag to ${{ github.sha }}"
+          git push
