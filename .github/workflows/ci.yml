@@ -49,4 +49,4 @@ jobs:
 
       #  Push Docker Image
       - name: Push Docker Image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/springboot:1.0.0
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/springboot
