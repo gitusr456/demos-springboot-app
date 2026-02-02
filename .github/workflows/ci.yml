@@ -1,0 +1,49 @@
+name: CI - Build & Publish (Windows)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      # Checkout source code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      #  Setup Java (Windows)
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      #  Build Spring Boot JAR
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      #  Docker Login (Windows-safe)
+      - name: Docker Login
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login `
+            -u "${{ secrets.DOCKER_USERNAME }}" `
+            --password-stdin
+
+      #  Build Docker Image
+      - name: Build Docker Image
+        run: |
+          docker build `
+            -t ${{ secrets.DOCKER_USERNAME }}/springboot:${{ github.sha }} `
+            .
+      # tag docker image   
+      - name: Build the Docker image
+        run: docker build . --file Dockerfile --tag springboot:${{ github.sha }}
+
+      #  Push Docker Image
+      - name: Push Docker Image
+        run: |
+          docker push `
+            ${{ secrets.DOCKER_USERNAME }}/springboot:${{ github.sha }}
