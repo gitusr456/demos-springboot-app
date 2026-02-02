@@ -27,23 +27,16 @@ jobs:
 
       #  Docker Login (Windows-safe)
       - name: Docker Login
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login `
-            -u "${{ secrets.DOCKER_USERNAME }}" `
-            --password-stdin
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       #  Build Docker Image
       - name: Build Docker Image
-        run: |
-          docker build `
-            -t ${{ secrets.DOCKER_USERNAME }}/springboot:${{ github.sha }} `
-            .
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/springboot:1.0.0 .
+        
       # tag docker image   
       - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag springboot:${{ github.sha }}
+        run: docker build . --file Dockerfile --tag springboot:1.0.0
 
       #  Push Docker Image
       - name: Push Docker Image
-        run: |
-          docker push `
-            ${{ secrets.DOCKER_USERNAME }}/springboot:${{ github.sha }}
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/springboot:1.0.0
