@@ -41,7 +41,7 @@ jobs:
 
       #  Build Docker Image
       #- name: Build Docker Image
-      #  run: docker build -t ${{ secrets.DOCKER_USERNAME }}/springboot:latest .
+      #  run: docker build -t docker.io/${{ secrets.DOCKER_USERNAME }}/springboot:latest .
         
       # tag docker image   
       - name: Build the Docker image
@@ -49,4 +49,4 @@ jobs:
 
       #  Push Docker Image
       - name: Push Docker Image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/springboot:latest
+        run: docker push docker.io/${{ secrets.DOCKER_USERNAME }}/springboot:latest
